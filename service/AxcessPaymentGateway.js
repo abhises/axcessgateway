@@ -1,77 +1,11 @@
 import { ErrorHandler, SafeUtils, Logger, ScyllaDb } from "../utils/index.js";
 import { URL } from "url";
 import crypto from "crypto";
-import http from "http";
-import https from "https";
-
-const DEFAULT_HTTP_TIMEOUT_MS = 12000;
-const DEFAULT_CHECKOUT_EXPIRY_MINUTES = 25;
-
-function httpRequestWithBearer({
-  urlString,
-  method = "GET",
-  bearerToken,
-  headers = {},
-  body = null,
-  timeoutMs = DEFAULT_HTTP_TIMEOUT_MS,
-}) {
-  return new Promise((resolve, reject) => {
-    try {
-      const url = new URL(urlString);
-      const isHttps = url.protocol === "https:";
-      const transport = isHttps ? https : http;
-
-      const requestOptions = {
-        method,
-        hostname: url.hostname,
-        port: url.port || (isHttps ? 443 : 80),
-        path: url.pathname + (url.search || ""),
-        headers: {
-          Authorization: `Bearer ${bearerToken}`,
-          Accept: "application/json",
-          ...headers,
-        },
-        timeout: timeoutMs,
-      };
-
-      const req = transport.request(requestOptions, (res) => {
-        let responseData = "";
-        res.setEncoding("utf8");
-        res.on("data", (chunk) => (responseData += chunk));
-        res.on("end", () => {
-          const status = res.statusCode || 0;
-          let parsed = null;
-          try {
-            parsed = responseData ? JSON.parse(responseData) : null;
-          } catch {
-            // not JSON
-          }
-          resolve({
-            status,
-            data: parsed,
-            raw: responseData,
-            headers: res.headers,
-          });
-        });
-      });
-
-      req.on("error", (err) => reject(err));
-      if (body) req.write(body);
-      req.end();
-    } catch (e) {
-      reject(e);
-    }
-  });
-}
-
-function toFormUrlEncoded(paramsObj = {}) {
-  const search = new URLSearchParams();
-  for (const [k, v] of Object.entries(paramsObj)) {
-    if (v === undefined || v === null) continue;
-    search.set(k, String(v));
-  }
-  return search.toString();
-}
+import {
+  DEFAULT_HTTP_TIMEOUT_MS,
+  DEFAULT_CHECKOUT_EXPIRY_MINUTES,
+} from "../constants/constant.js";
+import { toFormUrlEncoded, httpRequestWithBearer } from "../helper/helper.js";
 
 export default class PaymentGatewayAxcess {
   /**
@@ -281,6 +215,7 @@ export default class PaymentGatewayAxcess {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body,
     });
+    console.log("res", res);
 
     if (res.status < 200 || res.status >= 300 || !res.data?.id) {
       ErrorHandler.add_error("Axcess create checkout failed", {

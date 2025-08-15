@@ -246,6 +246,7 @@ describe("PaymentGatewayAxcess – adapter", () => {
       config: baseConfig,
     });
   });
+  // <-- Add the httpRequestWithBearer mock here
 
   test("constructor: throws when paymentGatewayService missing", () => {
     expect(() => new PaymentGatewayAxcess({ config: baseConfig })).toThrow();
