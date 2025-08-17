@@ -6,6 +6,7 @@ let rules = [];
 function respond({ options }) {
   const path = options.path || "";
   const method = (options.method || "GET").toUpperCase();
+  console.log("MOCK HTTPS REQUEST:", method, path); // Add this line
 
   for (const r of rules) {
     const matched =
@@ -31,6 +32,8 @@ function respond({ options }) {
 }
 
 function request(options, callback) {
+  console.log("HTTPS Mock called with:", options);
+
   const req = new EventEmitter();
   req._body = "";
   req.write = (chunk) => {

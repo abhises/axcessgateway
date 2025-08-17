@@ -1,6 +1,7 @@
 import http from "http";
 import https from "https";
 import { DEFAULT_HTTP_TIMEOUT_MS } from "../constants/constant.js";
+import { URL } from "url";
 
 function httpRequestWithBearer({
   urlString,

@@ -1,5 +1,11 @@
-// __test__/PaymentGatewayAxcess.test.mjs
+// Place this at the VERY TOP, before any other imports!
+await jest.unstable_mockModule("https", async () => {
+  return (await import("../__mocks__/https.js")).default;
+});
+
+// Now import everything else
 import { jest } from "@jest/globals";
+import httpsMock from "../__mocks__/https.js";
 import crypto from "crypto";
 import PaymentGatewayAxcess from "../service/AxcessPaymentGateway.js"; // ESM import
 import PaymentGatewayServiceMock from "../__mocks__/PaymentGatewayServiceMock.js";
@@ -7,69 +13,6 @@ import setDefaultHttpsResponders from "../helper/setDefaultHttpsResponders.js";
 // -------------------------------
 // Mock https module
 // -------------------------------
-await jest.unstable_mockModule("https", async () => {
-  const { EventEmitter } = await import("events");
-
-  let rules = [];
-
-  function respond({ options }) {
-    const path = options.path || "";
-    const method = (options.method || "GET").toUpperCase();
-
-    for (const r of rules) {
-      const matched =
-        typeof r.matcher === "function"
-          ? r.matcher({ options, path, method })
-          : String(path).startsWith(String(r.matcher));
-      if (matched) {
-        const out = r.responder({ options, path, method }) || {};
-        return {
-          status: out.status ?? 200,
-          json: out.json ?? { ok: true },
-          headers: out.headers ?? { "content-type": "application/json" },
-        };
-      }
-    }
-
-    return {
-      status: 200,
-      json: { ok: true, path, method },
-      headers: { "content-type": "application/json" },
-    };
-  }
-
-  function request(options, callback) {
-    const req = new EventEmitter();
-    req._body = "";
-    req.write = (chunk) => {
-      req._body += chunk;
-    };
-    req.end = () => {
-      const { status, json, headers } = respond({ options });
-      setImmediate(() => {
-        const res = new EventEmitter();
-        res.statusCode = status;
-        res.headers = headers;
-        res.setEncoding = () => {};
-        callback(res);
-        const bodyStr = headers["content-type"]?.includes("application/json")
-          ? JSON.stringify(json)
-          : String(json);
-        res.emit("data", bodyStr);
-        res.emit("end");
-      });
-    };
-    return req;
-  }
-
-  request.__setMockResponse = (matcher, responder) =>
-    rules.push({ matcher, responder });
-  request.__resetMock = () => {
-    rules = [];
-  };
-
-  return { request };
-});
 
 // -------------------------------
 // Base config
@@ -93,9 +36,8 @@ const baseConfig = {
   threeDS: { challengeWindowSize: "05", attemptExemption: false },
   session: { checkoutExpiryMinutes: 25 },
 };
-// const https = await import("https"); // <- use directly
 
-import httpsMock from "../__mocks__/https.js";
+// const https = await import("https"); // <- use directly
 
 // -------------------------------
 // Helper: set mock responders
@@ -131,6 +73,7 @@ describe("PaymentGatewayAxcess – adapter", () => {
       currency: "USD",
       paymentType: "DB",
     });
+    console.log("Checkout Session Output:", out);
     expect(out.checkoutId).toBe("CHK-1");
     expect(out.redirectUrl).toContain("/v1/checkouts/CHK-1/payment");
     const saved = await svc.getSessionsBy("orderId", "ORD-1");

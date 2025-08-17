@@ -1,4 +1,5 @@
 // const https = await import("https"); // <- use directly
+import https from "https"; // <- use directly
 
 export default function setDefaultHttpsResponders(request) {
   request.__resetMock();
@@ -6,7 +7,7 @@ export default function setDefaultHttpsResponders(request) {
   // POST /v1/checkouts
   request.__setMockResponse(
     (ctx) => ctx.method === "POST" && ctx.path.startsWith("/v1/checkouts"),
-    () => ({ status: 200, json: { id: "CHK-1" } })
+    () => ({ status: 200, data: { id: "CHK-1" } })
   );
 
   // GET /v1/checkouts/{id}/payment
@@ -14,7 +15,7 @@ export default function setDefaultHttpsResponders(request) {
     (ctx) => ctx.method === "GET" && ctx.path.startsWith("/v1/checkouts/"),
     () => ({
       status: 200,
-      json: {
+      data: {
         id: "PAY-OK-1",
         amount: "24.99",
         currency: "USD",
@@ -31,7 +32,7 @@ export default function setDefaultHttpsResponders(request) {
     (ctx) => ctx.method === "POST" && ctx.path === "/v1/payments",
     () => ({
       status: 200,
-      json: {
+      data: {
         id: "PAY-S2S-1",
         amount: "10.00",
         currency: "USD",
@@ -45,7 +46,7 @@ export default function setDefaultHttpsResponders(request) {
     (ctx) => ctx.method === "POST" && /^\/v1\/payments\/[^/]+$/.test(ctx.path),
     () => ({
       status: 200,
-      json: {
+      data: {
         id: "PAY-POST-1",
         amount: "10.00",
         currency: "USD",
@@ -59,7 +60,7 @@ export default function setDefaultHttpsResponders(request) {
     (ctx) => ctx.method === "POST" && ctx.path === "/v1/registrations",
     () => ({
       status: 200,
-      json: {
+      data: {
         id: "REG-1",
         paymentBrand: "VISA",
         card: { last4: "1111", expiryMonth: "12", expiryYear: "2030" },
@@ -74,7 +75,7 @@ export default function setDefaultHttpsResponders(request) {
       /^\/v1\/registrations\/[^/]+\/payments$/.test(ctx.path),
     () => ({
       status: 200,
-      json: {
+      data: {
         id: "PAY-TOKEN-1",
         amount: "5.00",
         currency: "USD",
@@ -87,20 +88,20 @@ export default function setDefaultHttpsResponders(request) {
   request.__setMockResponse(
     (ctx) =>
       ctx.method === "DELETE" && /^\/v1\/registrations\/[^/]+\?/.test(ctx.path),
-    () => ({ status: 204, json: "" })
+    () => ({ status: 204, data: "" })
   );
 
   // POST /v1/subscriptions
   request.__setMockResponse(
     (ctx) => ctx.method === "POST" && ctx.path === "/v1/subscriptions",
-    () => ({ status: 200, json: { id: "SUB-1" } })
+    () => ({ status: 200, data: { id: "SUB-1" } })
   );
 
   // DELETE /v1/subscriptions/{id}
   request.__setMockResponse(
     (ctx) =>
       ctx.method === "DELETE" && /^\/v1\/subscriptions\/[^/]+\?/.test(ctx.path),
-    () => ({ status: 204, json: "" })
+    () => ({ status: 204, data: "" })
   );
 
   // POST /v1/threeDSecure
@@ -108,7 +109,7 @@ export default function setDefaultHttpsResponders(request) {
     (ctx) => ctx.method === "POST" && ctx.path === "/v1/threeDSecure",
     () => ({
       status: 200,
-      json: { id: "3DS-1", redirect: { url: "//acs.example/..." } },
+      data: { id: "3DS-1", redirect: { url: "//acs.example/..." } },
     })
   );
 
@@ -116,7 +117,7 @@ export default function setDefaultHttpsResponders(request) {
   request.__setMockResponse(
     (ctx) =>
       ctx.method === "POST" && /^\/v1\/threeDSecure\/[^/]+$/.test(ctx.path),
-    () => ({ status: 200, json: { id: "3DS-1", status: "authenticated" } })
+    () => ({ status: 200, data: { id: "3DS-1", status: "authenticated" } })
   );
 
   // GET /v1/payments/{id}?entityId=...
@@ -124,11 +125,23 @@ export default function setDefaultHttpsResponders(request) {
     (ctx) => ctx.method === "GET" && /^\/v1\/payments\/[^/]+\?/.test(ctx.path),
     () => ({
       status: 200,
-      json: {
+      data: {
         id: "PAY-VER-1",
         amount: "7.77",
         currency: "USD",
         result: { code: "000.100.110", description: "Approved" },
+      },
+    })
+  );
+  request.__setMockResponse(
+    () => true,
+    () => ({
+      status: 401,
+      data: {
+        result: {
+          code: "800.900.300",
+          description: "invalid authentication information",
+        },
       },
     })
   );
