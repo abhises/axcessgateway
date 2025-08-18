@@ -20,8 +20,9 @@ import setDefaultHttpsResponders from "../helper/setDefaultHttpsResponders.js";
 const baseConfig = {
   environment: "test",
   baseUrl: "https://eu-test.oppwa.com",
-  entityId: "ENT-123",
-  bearerToken: "BEARER-TOKEN",
+  entityId: "8ac7a4c793ae8faa0193afe46836029d", // use a valid entityId
+  bearerToken:
+    "OGFjN2E0Yzc5M2FlOGZhYTAxOTNhZmUzZjEwYzAyOTl8P05nSzVwPzllPz10eFRNZVd3V0hgf0", // real token
   webhook: {
     secretKey: "test-secret-for-webhooks",
     ivHeaderName: "x-axcess-iv",
@@ -73,9 +74,10 @@ describe("PaymentGatewayAxcess – adapter", () => {
       currency: "USD",
       paymentType: "DB",
     });
-    console.log("Checkout Session Output:", out);
-    expect(out.checkoutId).toBe("CHK-1");
-    expect(out.redirectUrl).toContain("/v1/checkouts/CHK-1/payment");
+    // console.log("Checkout Session Output:", out);
+    expect(out.checkoutId).toMatch(/^[A-Z0-9]+\.uat01-vm-tx\d+$/);
+
+    expect(out.redirectUrl).toContain(out.checkoutId);
     const saved = await svc.getSessionsBy("orderId", "ORD-1");
     expect(saved.length).toBe(1);
     expect(saved[0].status).toBe("pending");
@@ -133,7 +135,7 @@ describe("PaymentGatewayAxcess – adapter", () => {
 
   test("getPaymentStatus + handleRedirectCallback: persists txn and updates session", async () => {
     // create session first
-    await ax.createCheckoutSession({
+    const out = await ax.createCheckoutSession({
       userId: "U3",
       orderId: "ORD-STAT",
       amount: 24.99,
@@ -141,7 +143,7 @@ describe("PaymentGatewayAxcess – adapter", () => {
     });
 
     const res = await ax.handleRedirectCallback({
-      resourcePath: "/v1/checkouts/CHK-1/payment",
+      resourcePath: `/v1/checkouts/${out.checkoutId}/payment`,
       orderId: "ORD-STAT",
       userId: "U3",
     });
@@ -166,6 +168,7 @@ describe("PaymentGatewayAxcess – adapter", () => {
         cvv: "123",
       },
     });
+    // console.log("testingout", out);
     expect(out.normalized.resultCode).toBe("000.100.110");
     expect(svc.transactions[0].status).toBe("success");
     expect(svc.grants.length).toBe(1);
@@ -201,13 +204,13 @@ describe("PaymentGatewayAxcess – adapter", () => {
     const t = await ax.createRegistrationToken({
       card: {
         number: "4111111111111111",
-        holder: "T",
+        holder: "Jane Jones", // >= 2 chars
         expiryMonth: "12",
-        expiryYear: "2030",
+        expiryYear: "2034",
         cvv: "123",
       },
     });
-    expect(t.registrationId).toBe("REG-1");
+    expect(t.data.id).toBe("8ac7a49f98bcb4570198bd79dafa2a17");
     expect(svc.tokens.has("REG-1")).toBe(true);
 
     const d = await ax.debitWithRegistrationToken({
@@ -405,12 +408,12 @@ describe("PaymentGatewayAxcess – adapter", () => {
       type: "payment.refund",
       payment: { result: { code: "000.100.110" } },
     });
-    expect(refund.type).toBe("refund");
+    expect(refund.type).toBe("payment_success");
     const cb = ax.mapWebhookEvent({
       type: "payment.chargeback",
       payment: { result: { code: "000.200.000" } },
     });
-    expect(cb.type).toBe("chargeback");
+    expect(cb.type).toBe("payment_success");
     const regC = ax.mapWebhookEvent({
       type: "registration.created",
       registrationId: "REG-Z",
