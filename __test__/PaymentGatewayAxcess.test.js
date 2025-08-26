@@ -1,3 +1,4 @@
+import baseConfig from "../configs/config.js";
 // Place this at the VERY TOP, before any other imports!
 await jest.unstable_mockModule("https", async () => {
   return (await import("../__mocks__/https.js")).default;
@@ -17,26 +18,6 @@ import setDefaultHttpsResponders from "../helper/setDefaultHttpsResponders.js";
 // -------------------------------
 // Base config
 // -------------------------------
-const baseConfig = {
-  environment: "test",
-  baseUrl: "https://eu-test.oppwa.com",
-  entityId: "8ac7a4c793ae8faa0193afe46836029d", // use a valid entityId
-  bearerToken:
-    "OGFjN2E0Yzc5M2FlOGZhYTAxOTNhZmUzZjEwYzAyOTl8P05nSzVwPzllPz10eFRNZVd3V0hgf0", // real token
-  webhook: {
-    secretKey: "test-secret-for-webhooks",
-    ivHeaderName: "x-axcess-iv",
-    sigHeaderName: "x-axcess-signature",
-    idempotencyStoreTtlHours: 48,
-  },
-  ui: {
-    widgetBrands: ["VISA", "MASTER"],
-    defaultLocale: "en",
-  },
-  locales: { en: "en", fr: "fr" },
-  threeDS: { challengeWindowSize: "05", attemptExemption: false },
-  session: { checkoutExpiryMinutes: 25 },
-};
 
 // const https = await import("https"); // <- use directly
 

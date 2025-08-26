@@ -1,0 +1,45 @@
+{
+  "paymentGatewaySession": {
+    "TableName": "paymentGatewaySession",
+    "PK": "orderId",
+    "SK": "id",
+    "AttributeDefinitions": [
+      { "AttributeName": "orderId", "AttributeType": "S" },
+      { "AttributeName": "id", "AttributeType": "S" },
+      { "AttributeName": "userId", "AttributeType": "S" },
+      { "AttributeName": "checkoutId", "AttributeType": "S" },
+      { "AttributeName": "createdAt", "AttributeType": "N" }
+    ],
+    "KeySchema": [
+      { "AttributeName": "orderId", "KeyType": "HASH" },
+      { "AttributeName": "id", "KeyType": "RANGE" }
+    ],
+    "GlobalSecondaryIndexes": [
+      {
+        "IndexName": "UserSessionsIndex",
+        "KeySchema": [
+          { "AttributeName": "userId", "KeyType": "HASH" },
+          { "AttributeName": "createdAt", "KeyType": "RANGE" }
+        ],
+        "Projection": { "ProjectionType": "ALL" },
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": 5,
+          "WriteCapacityUnits": 5
+        }
+      },
+      {
+        "IndexName": "CheckoutIdIndex",
+        "KeySchema": [{ "AttributeName": "checkoutId", "KeyType": "HASH" }],
+        "Projection": { "ProjectionType": "ALL" },
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": 5,
+          "WriteCapacityUnits": 5
+        }
+      }
+    ],
+    "ProvisionedThroughput": {
+      "ReadCapacityUnits": 5,
+      "WriteCapacityUnits": 5
+    }
+  }
+}

@@ -886,92 +886,92 @@ export default class PaymentGatewayAxcess {
    * @param {object} [params.customer]
    * @returns {Promise<{registrationId:string, maskedPan?:string, brand?:string, expiry?:string}>}
    */
-  async createRegistrationToken(cardWrapper) {
-    const card = cardWrapper.card; // extract inner object
-    console.log("card", card);
-    const bodyParams = {
-      entityId: CONFIG.ENTITY_ID,
-      "card.number": card.number,
-      "card.holder": card.holder,
-      "card.expiryMonth": card.expiryMonth,
-      "card.expiryYear": card.expiryYear,
-      "card.cvv": card.cvv,
-      paymentBrand: "VISA", // explicitly add this
-    };
-    console.log("bodyParams", bodyParams);
-
-    const url = `${CONFIG.API_BASE}/v1/registrations`;
-    const res = await testhttpRequest({
-      urlString: url,
-      method: "POST",
-      bearerToken: CONFIG.BEARER_TOKEN,
-      body: testtoFormUrlEncoded(bodyParams),
-    });
-    console.log(res);
-
-    return res;
-  }
-  // async createRegistrationToken(params = {}) {
-  //   const cleaned = SafeUtils.sanitizeValidate({
-  //     card: { value: params.card, type: "object", required: true },
-  //     customer: {
-  //       value: params.customer || {},
-  //       type: "object",
-  //       required: false,
-  //       default: {},
-  //     },
-  //   });
-
-  //   const endpoint = `${this.apiBaseUrl}/v1/registrations`;
+  // async createRegistrationToken(cardWrapper) {
+  //   const card = cardWrapper.card; // extract inner object
+  //   console.log("card", card);
   //   const bodyParams = {
-  //     entityId: this.entityId,
-  //     "card.number": cleaned.card.number,
-  //     "card.holder": cleaned.card.holder,
-  //     "card.expiryMonth": cleaned.card.expiryMonth,
-  //     "card.expiryYear": cleaned.card.expiryYear,
-  //     "card.cvv": cleaned.card.cvv,
+  //     entityId: CONFIG.ENTITY_ID,
+  //     "card.number": card.number,
+  //     "card.holder": card.holder,
+  //     "card.expiryMonth": card.expiryMonth,
+  //     "card.expiryYear": card.expiryYear,
+  //     "card.cvv": card.cvv,
+  //     paymentBrand: "VISA", // explicitly add this
   //   };
-  //   // console.log("createRegistrationToken bodyParams", bodyParams);
-  //   const res = await httpRequestWithBearer({
-  //     urlString: endpoint,
+  //   console.log("bodyParams", bodyParams);
+
+  //   const url = `${CONFIG.API_BASE}/v1/registrations`;
+  //   const res = await testhttpRequest({
+  //     urlString: url,
   //     method: "POST",
-  //     bearerToken: this.apiBearerToken,
-  //     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-  //     body: toFormUrlEncoded(bodyParams),
+  //     bearerToken: CONFIG.BEARER_TOKEN,
+  //     body: testtoFormUrlEncoded(bodyParams),
   //   });
+  //   console.log(res);
 
-  //   console.log("createRegistrationToken res", res);
-
-  //   if (res.status < 200 || res.status >= 300 || !res.data?.id) {
-  //     ErrorHandler.add_error("Axcess createRegistrationToken failed", {
-  //       status: res.status,
-  //       raw: res.raw,
-  //     });
-  //     throw new Error("Failed to create registration token");
-  //   }
-
-  //   const tokenRecord = {
-  //     id: res.data.id,
-  //     gateway: "axcess",
-  //     last4: res.data.card?.bin ? undefined : res.data.card?.last4 || null,
-  //     brand: res.data.paymentBrand || null,
-  //     expiry:
-  //       res.data.card?.expiryMonth && res.data.card?.expiryYear
-  //         ? `${res.data.card.expiryYear}-${res.data.card.expiryMonth}`
-  //         : null,
-  //     createdAt: Date.now(),
-  //   };
-  //   await this.svc.saveToken?.(tokenRecord);
-
-  //   return {
-  //     registrationId: res.data.id,
-  //     maskedPan: res.data.card?.bin
-  //       ? `${res.data.card.bin}******${res.data.card?.last4 || ""}`
-  //       : undefined,
-  //     brand: res.data.paymentBrand || undefined,
-  //     expiry: tokenRecord.expiry || undefined,
-  //   };
+  //   return res;
   // }
+  async createRegistrationToken(params = {}) {
+    const cleaned = SafeUtils.sanitizeValidate({
+      card: { value: params.card, type: "object", required: true },
+      customer: {
+        value: params.customer || {},
+        type: "object",
+        required: false,
+        default: {},
+      },
+    });
+
+    const endpoint = `${this.apiBaseUrl}/v1/registrations`;
+    const bodyParams = {
+      entityId: this.entityId,
+      "card.number": cleaned.card.number,
+      "card.holder": cleaned.card.holder,
+      "card.expiryMonth": cleaned.card.expiryMonth,
+      "card.expiryYear": cleaned.card.expiryYear,
+      "card.cvv": cleaned.card.cvv,
+    };
+    // console.log("createRegistrationToken bodyParams", bodyParams);
+    const res = await httpRequestWithBearer({
+      urlString: endpoint,
+      method: "POST",
+      bearerToken: this.apiBearerToken,
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: toFormUrlEncoded(bodyParams),
+    });
+
+    console.log("createRegistrationToken res", res);
+
+    if (res.status < 200 || res.status >= 300 || !res.data?.id) {
+      ErrorHandler.add_error("Axcess createRegistrationToken failed", {
+        status: res.status,
+        raw: res.raw,
+      });
+      throw new Error("Failed to create registration token");
+    }
+
+    const tokenRecord = {
+      id: res.data.id,
+      gateway: "axcess",
+      last4: res.data.card?.bin ? undefined : res.data.card?.last4 || null,
+      brand: res.data.paymentBrand || null,
+      expiry:
+        res.data.card?.expiryMonth && res.data.card?.expiryYear
+          ? `${res.data.card.expiryYear}-${res.data.card.expiryMonth}`
+          : null,
+      createdAt: Date.now(),
+    };
+    await this.svc.saveToken?.(tokenRecord);
+
+    return {
+      registrationId: res.data.id,
+      maskedPan: res.data.card?.bin
+        ? `${res.data.card.bin}******${res.data.card?.last4 || ""}`
+        : undefined,
+      brand: res.data.paymentBrand || undefined,
+      expiry: tokenRecord.expiry || undefined,
+    };
+  }
 
   /**
    * Charge with a registration token (paymentType=DB).
