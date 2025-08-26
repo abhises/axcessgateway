@@ -84,4 +84,14 @@ router.post("/api/payments/axcess/token/charge", async (req, res) => {
   }
 });
 
+router.post("/api/webhooks/axcess", async (req, res) => {
+  try {
+    const raw = req.rawBody || JSON.stringify(req.body);
+    await axcess.handleWebhook(raw, req.headers);
+    res.status(200).end();
+  } catch (e) {
+    res.status(400).end();
+  }
+});
+
 export default router;
