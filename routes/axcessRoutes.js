@@ -102,6 +102,7 @@ router.post("/api/webhooks/axcess", async (req, res) => {
   try {
     const raw = req.rawBody || JSON.stringify(req.body);
     await axcess.handleWebhook(raw, req.headers);
+    console.log("Webhook processed successfully");
     res.status(200).end();
   } catch (e) {
     res.status(400).end();
