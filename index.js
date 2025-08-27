@@ -2,11 +2,20 @@ import express from "express";
 import axcessRoutes from "./routes/axcessRoutes.js";
 import dotenv from "dotenv";
 import cors from "cors";
+import bodyParser from "body-parser";
 
 dotenv.config();
 
 const app = express();
 app.use(cors());
+
+app.use(
+  bodyParser.json({
+    verify: (req, res, buf) => {
+      req.rawBody = buf.toString();
+    },
+  })
+);
 
 app.use(express.json());
 
