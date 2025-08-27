@@ -1,45 +1,142 @@
 {
-  "paymentGatewaySession": {
-    "TableName": "paymentGatewaySession",
-    "PK": "orderId",
-    "SK": "id",
-    "AttributeDefinitions": [
-      { "AttributeName": "orderId", "AttributeType": "S" },
-      { "AttributeName": "id", "AttributeType": "S" },
-      { "AttributeName": "userId", "AttributeType": "S" },
-      { "AttributeName": "checkoutId", "AttributeType": "S" },
-      { "AttributeName": "createdAt", "AttributeType": "N" }
-    ],
+  "paymentGateway_sessions": {
+    "TableName": "paymentGateway_sessions",
+    "PK": "pk",
+    "SK": "sk",
     "KeySchema": [
-      { "AttributeName": "orderId", "KeyType": "HASH" },
-      { "AttributeName": "id", "KeyType": "RANGE" }
+      { "AttributeName": "pk", "KeyType": "HASH" },
+      { "AttributeName": "sk", "KeyType": "RANGE" }
+    ],
+    "AttributeDefinitions": [
+      { "AttributeName": "pk", "AttributeType": "S" },
+      { "AttributeName": "sk", "AttributeType": "S" },
+      { "AttributeName": "order_id", "AttributeType": "S" },
+      { "AttributeName": "created_at", "AttributeType": "S" }
     ],
     "GlobalSecondaryIndexes": [
       {
-        "IndexName": "UserSessionsIndex",
+        "IndexName": "order_gsi",
         "KeySchema": [
-          { "AttributeName": "userId", "KeyType": "HASH" },
-          { "AttributeName": "createdAt", "KeyType": "RANGE" }
+          { "AttributeName": "order_id", "KeyType": "HASH" },
+          { "AttributeName": "created_at", "KeyType": "RANGE" }
         ],
-        "Projection": { "ProjectionType": "ALL" },
-        "ProvisionedThroughput": {
-          "ReadCapacityUnits": 5,
-          "WriteCapacityUnits": 5
-        }
-      },
-      {
-        "IndexName": "CheckoutIdIndex",
-        "KeySchema": [{ "AttributeName": "checkoutId", "KeyType": "HASH" }],
-        "Projection": { "ProjectionType": "ALL" },
-        "ProvisionedThroughput": {
-          "ReadCapacityUnits": 5,
-          "WriteCapacityUnits": 5
-        }
+        "Projection": { "ProjectionType": "ALL" }
       }
     ],
-    "ProvisionedThroughput": {
-      "ReadCapacityUnits": 5,
-      "WriteCapacityUnits": 5
-    }
+    "BillingMode": "PAY_PER_REQUEST"
+  },
+  "paymentGateway_transactions": {
+    "TableName": "paymentGateway_transactions",
+    "PK": "pk",
+    "SK": "sk",
+    "KeySchema": [
+      { "AttributeName": "pk", "KeyType": "HASH" },
+      { "AttributeName": "sk", "KeyType": "RANGE" }
+    ],
+    "AttributeDefinitions": [
+      { "AttributeName": "pk", "AttributeType": "S" },
+      { "AttributeName": "sk", "AttributeType": "S" },
+      { "AttributeName": "statusGSI", "AttributeType": "S" },
+      { "AttributeName": "order_id", "AttributeType": "S" },
+      { "AttributeName": "created_at", "AttributeType": "S" }
+    ],
+    "GlobalSecondaryIndexes": [
+      {
+        "IndexName": "status_gsi",
+        "KeySchema": [
+          { "AttributeName": "statusGSI", "KeyType": "HASH" },
+          { "AttributeName": "created_at", "KeyType": "RANGE" }
+        ],
+        "Projection": { "ProjectionType": "ALL" }
+      },
+      {
+        "IndexName": "order_gsi",
+        "KeySchema": [
+          { "AttributeName": "order_id", "KeyType": "HASH" },
+          { "AttributeName": "created_at", "KeyType": "RANGE" }
+        ],
+        "Projection": { "ProjectionType": "ALL" }
+      }
+    ],
+    "BillingMode": "PAY_PER_REQUEST"
+  },
+  "paymentGateway_schedules": {
+    "TableName": "paymentGateway_schedules",
+    "PK": "pk",
+    "SK": "sk",
+    "KeySchema": [
+      { "AttributeName": "pk", "KeyType": "HASH" },
+      { "AttributeName": "sk", "KeyType": "RANGE" }
+    ],
+    "AttributeDefinitions": [
+      { "AttributeName": "pk", "AttributeType": "S" },
+      { "AttributeName": "sk", "AttributeType": "S" },
+      { "AttributeName": "subscriptionId", "AttributeType": "S" },
+      { "AttributeName": "created_at", "AttributeType": "S" },
+      { "AttributeName": "order_id", "AttributeType": "S" }
+    ],
+    "GlobalSecondaryIndexes": [
+      {
+        "IndexName": "subscription_gsi",
+        "KeySchema": [
+          { "AttributeName": "subscriptionId", "KeyType": "HASH" },
+          { "AttributeName": "created_at", "KeyType": "RANGE" }
+        ],
+        "Projection": { "ProjectionType": "ALL" }
+      },
+      {
+        "IndexName": "order_gsi",
+        "KeySchema": [
+          { "AttributeName": "order_id", "KeyType": "HASH" },
+          { "AttributeName": "created_at", "KeyType": "RANGE" }
+        ],
+        "Projection": { "ProjectionType": "ALL" }
+      }
+    ],
+    "BillingMode": "PAY_PER_REQUEST"
+  },
+  "paymentGateway_tokens": {
+    "TableName": "paymentGateway_tokens",
+    "PK": "pk",
+    "SK": "sk",
+    "KeySchema": [
+      { "AttributeName": "pk", "KeyType": "HASH" },
+      { "AttributeName": "sk", "KeyType": "RANGE" }
+    ],
+    "AttributeDefinitions": [
+      { "AttributeName": "pk", "AttributeType": "S" },
+      { "AttributeName": "sk", "AttributeType": "S" },
+      { "AttributeName": "expiry", "AttributeType": "S" }
+    ],
+    "GlobalSecondaryIndexes": [
+      {
+        "IndexName": "expiry_gsi",
+        "KeySchema": [{ "AttributeName": "expiry", "KeyType": "HASH" }],
+        "Projection": { "ProjectionType": "ALL" }
+      }
+    ],
+    "BillingMode": "PAY_PER_REQUEST"
+  },
+  "paymentGateway_webhooks": {
+    "TableName": "paymentGateway_webhooks",
+    "PK": "pk",
+    "SK": "sk",
+    "KeySchema": [
+      { "AttributeName": "pk", "KeyType": "HASH" },
+      { "AttributeName": "sk", "KeyType": "RANGE" }
+    ],
+    "AttributeDefinitions": [
+      { "AttributeName": "pk", "AttributeType": "S" },
+      { "AttributeName": "sk", "AttributeType": "S" },
+      { "AttributeName": "subscriptionId", "AttributeType": "S" }
+    ],
+    "GlobalSecondaryIndexes": [
+      {
+        "IndexName": "subscription_gsi",
+        "KeySchema": [{ "AttributeName": "subscriptionId", "KeyType": "HASH" }],
+        "Projection": { "ProjectionType": "ALL" }
+      }
+    ],
+    "BillingMode": "PAY_PER_REQUEST"
   }
 }

@@ -1,7 +1,8 @@
 import express from "express";
 import PaymentGatewayAxcess from "../service/AxcessPaymentGateway.js";
-import paymentGatewayService from "../service/AxcessPaymentGateway.js"; // your injected facade
+import paymentGatewayService from "../service/paymentGatewayService.js"; // your injected facade
 import axcessConfig from "../configs/config.js";
+import scylla_db from "../utils/ScyllaDb.js";
 
 const router = express.Router();
 
@@ -14,7 +15,16 @@ const axcess = new PaymentGatewayAxcess({
 // 1) Start widget checkout
 router.post("/payments/axcess/checkout", async (req, res) => {
   try {
+    await scylla_db.loadTableConfigs("./tables.json");
+
     const { userId, orderId, amount, currency, locale = "en" } = req.body || {};
+    // console.log("Starting checkout:", {
+    //   userId,
+    //   orderId,
+    //   amount,
+    //   currency,
+    //   locale,
+    // });
     const { checkoutId, redirectUrl } = await axcess.createCheckoutSession({
       userId,
       orderId,
@@ -22,12 +32,15 @@ router.post("/payments/axcess/checkout", async (req, res) => {
       currency,
     });
 
+    // console.log("Checkout session created:", { checkoutId, redirectUrl });
+
     // Option A: return HTML the FE will inject directly:
     const widgetHtml = axcess.getPaymentWidgetHtml({
       checkoutId,
       locale,
       brands: ["VISA", "MASTER"],
     });
+    // console.log("w", widgetHtml);
 
     res.json({ checkoutId, redirectUrl, widgetHtml });
   } catch (e) {
@@ -39,6 +52,7 @@ router.post("/payments/axcess/checkout", async (req, res) => {
 router.post("/payments/axcess/callback", async (req, res) => {
   try {
     const { resourcePath } = req.body || {};
+    console.log("Callback received:", { resourcePath });
     const orderId = req.query.orderId || req.body.orderId || "unknown";
     const out = await axcess.handleRedirectCallback({
       resourcePath,

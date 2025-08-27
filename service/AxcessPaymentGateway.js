@@ -173,10 +173,11 @@ export default class PaymentGatewayAxcess {
         default: {},
       },
     });
-
+    // console.log("cleaned", cleaned);
     // Reuse any existing “pending” session within TTL
     const existing =
       (await this.svc.getSessionsBy?.("orderId", cleaned.orderId)) || [];
+    // console.log("existing sessions", existing);
     const reusable = existing.find((s) => this.isCheckoutSessionValid(s));
     if (reusable) {
       Logger.writeLog({
@@ -208,6 +209,7 @@ export default class PaymentGatewayAxcess {
       // You can pass additional fields (customer.*) depending on your needs
       merchantTransactionId: cleaned.orderId,
     };
+    // console.log("bodyParams", bodyParams);
     const body = toFormUrlEncoded(bodyParams);
 
     const res = await httpRequestWithBearer({
@@ -231,9 +233,10 @@ export default class PaymentGatewayAxcess {
     const redirectUrl = `${this.apiBaseUrl}/v1/checkouts/${encodeURIComponent(
       checkoutId
     )}/payment`;
-
+    // console.log("redirectUrl", redirectUrl);
     const sessionRecord = {
-      id: crypto.randomUUID(),
+      pk: `user#${cleaned.userId}`, // required partition key
+      sk: `session#${cleaned.orderId}`,
       gateway: "axcess",
       userId: cleaned.userId,
       orderId: cleaned.orderId,
