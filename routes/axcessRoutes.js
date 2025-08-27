@@ -102,9 +102,10 @@ router.post("/api/payments/axcess/token/charge", async (req, res) => {
 router.post("/api/webhooks/axcess", async (req, res) => {
   try {
     const payload = JSON.stringify(req.body, null, 2);
+    console.log("PayPal Webhook:", payload);
 
     // Log to file (Render has an ephemeral disk, so this resets on redeploys)
-    fs.appendFileSync("paypal_webhooks.log", payload + "\n");
+    // fs.appendFileSync("paypal_webhooks.log", payload + "\n");
 
     // Also log to Render’s built-in logging (shows in Render dashboard)
     console.log("PayPal Webhook:", payload);
