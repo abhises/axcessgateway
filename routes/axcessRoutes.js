@@ -111,12 +111,12 @@ router.post("/api/webhooks/axcess", async (req, res) => {
     //   "PayPal Webhook test just want to know:",
     //   JSON.stringify(req.body)
     // );
-    console.log(" req_rawBody", req.rawBody, "req.headers", req.headers);
+    // console.log(" req_rawBody", req.rawBody, "req.headers", req.headers);
     // Also log to Render’s built-in logging (shows in Render dashboard)
     // console.log("PayPal Webhook:", payload);
     const raw = req.rawBody || JSON.stringify(req.body);
     await axcess.handleWebhook(raw, req.headers);
-    console.log("Webhook processed successfully");
+    // console.log("Webhook processed successfully");
     res.status(200).end();
   } catch (e) {
     res.status(400).end();
