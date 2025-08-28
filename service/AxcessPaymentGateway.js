@@ -95,8 +95,8 @@ export default class PaymentGatewayAxcess {
 
     this.webhookConfig = {
       secretKey: cleaned.webhook.secretKey || null,
-      ivHeaderName: cleaned.webhook.ivHeaderName || "x-axcess-iv",
-      sigHeaderName: cleaned.webhook.sigHeaderName || "x-axcess-signature",
+      ivHeaderName: cleaned.webhook.ivHeaderName || "x-initialization-vector",
+      sigHeaderName: cleaned.webhook.sigHeaderName || "x-authentication-tag",
       idempotencyStoreTtlHours: Number(
         cleaned.webhook.idempotencyStoreTtlHours || 48
       ),
@@ -1485,7 +1485,7 @@ export default class PaymentGatewayAxcess {
    * @returns {Promise<{ok:true}>}
    */
   async handleWebhook(rawBody, headers = {}) {
-    console.log("Axcess handleWebhook rawBody");
+    // console.log("Axcess handleWebhook rawBody");
     const { decryptedJson, idempotencyKey, verified } =
       this.decryptAndVerifyWebhook(rawBody, headers);
     // console.log("decryptedJson this is the decrpted", decryptedJson);
