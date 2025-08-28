@@ -8,7 +8,7 @@ const config = {
   bearerToken: process.env.AXCESS_BEARER_TOKEN,
   environment: process.env.NODE_ENV || "test", // ✅ required
   webhook: {
-    secretKey: "test-secret-for-webhooks",
+    secretKey: process.env.WEBHOOK_SECRET_KEY,
     ivHeaderName: "x-axcess-iv",
     sigHeaderName: "x-axcess-signature",
     idempotencyStoreTtlHours: 48,
