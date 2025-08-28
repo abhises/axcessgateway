@@ -1570,27 +1570,38 @@ export default class PaymentGatewayAxcess {
    * @param {object} headers
    * @returns {Promise<{ok:true}>}
    */
+
   async handleWebhook(rawBody, headers = {}) {
-    // console.log("Axcess handleWebhook rawBody");
+    console.log("Axcess handleWebhook rawBody");
     const { decryptedJson, idempotencyKey, verified } =
       this.decryptAndVerifyWebhook(rawBody, headers);
-    console.log(
-      "decryptedJson this is the decrpted",
-      decryptedJson,
-      idempotencyKey,
-      verified
-    );
+    // console.log(
+    //   "decryptedJson this is the decrpted",
+    //   decryptedJson,
+    //   idempotencyKey,
+    //   verified
+    // );
 
     // Optional: use your service to dedupe based on idempotency key
+
+    console.log("Axcess decryptedJson", decryptedJson, idempotencyKey);
+    const pk = `TRIGGER#${idempotencyKey}`;
+    const sk = `WEBHOOK#${idempotencyKey}`;
+
     await this.svc.saveWebhook?.({
+      pk,
+      sk,
       payload: decryptedJson,
       event: null,
-      createdAt: Date.now(),
+      createdAt: Date.now().toString(),
       verified,
       idempotencyKey,
     });
+    console.log("Axcess below this webhook");
 
     const event = this.mapWebhookEvent(decryptedJson);
+
+    console.log("Mapped webhook event", event);
 
     try {
       switch (event.type) {

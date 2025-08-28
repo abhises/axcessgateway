@@ -667,6 +667,7 @@ class paymentGatewayService {
    * @property {string} [createdAt] - optional
    */
   static async saveWebhook(webhookData) {
+    console.log("Saving webhook", webhookData);
     return scylla_db.putItem(table_names.webhooks, webhookData);
   }
 
