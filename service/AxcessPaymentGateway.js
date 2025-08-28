@@ -1418,9 +1418,11 @@ export default class PaymentGatewayAxcess {
       const ivBase64 =
         headers[this.webhookConfig.ivHeaderName] ||
         headers[this.webhookConfig.ivHeaderName.toLowerCase()];
+      console.log("ivBase64", ivBase64);
       const signature =
         headers[this.webhookConfig.sigHeaderName] ||
         headers[this.webhookConfig.sigHeaderName.toLowerCase()];
+      console.log("signature", signature);
       const iv = ivBase64 ? Buffer.from(String(ivBase64), "base64") : null;
 
       // Decrypt AES-256-CBC: ciphertext is base64 in body; alternatively, rawBody may already be decrypted JSON.
