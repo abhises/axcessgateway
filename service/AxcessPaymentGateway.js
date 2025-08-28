@@ -95,8 +95,12 @@ export default class PaymentGatewayAxcess {
 
     this.webhookConfig = {
       secretKey: cleaned.webhook.secretKey || null,
-      ivHeaderName: cleaned.webhook.ivHeaderName || "x-initialization-vector",
-      sigHeaderName: cleaned.webhook.sigHeaderName || "x-authentication-tag",
+      ivHeaderName: (
+        cleaned.webhook.ivHeaderName || "x-initialization-vector"
+      ).toLowerCase(),
+      sigHeaderName: (
+        cleaned.webhook.sigHeaderName || "x-authentication-tag"
+      ).toLowerCase(),
       idempotencyStoreTtlHours: Number(
         cleaned.webhook.idempotencyStoreTtlHours || 48
       ),
@@ -1415,13 +1419,11 @@ export default class PaymentGatewayAxcess {
     }
     console.log("Webhook secretKey is configured", rawBody, headers);
     try {
-      const ivBase64 =
-        headers[this.webhookConfig.ivHeaderName] ||
-        headers[this.webhookConfig.ivHeaderName.toLowerCase()];
+      const ivHeader = this.webhookConfig.ivHeaderName.toLowerCase();
+      const sigHeader = this.webhookConfig.sigHeaderName.toLowerCase();
+      const ivBase64 = headers[ivHeader] || headers[ivHeader.toLowerCase()];
       console.log("ivBase64", ivBase64);
-      const signature =
-        headers[this.webhookConfig.sigHeaderName] ||
-        headers[this.webhookConfig.sigHeaderName.toLowerCase()];
+      const signature = headers[sigHeader] || headers[sigHeader.toLowerCase()];
       console.log("signature", signature);
       const iv = ivBase64 ? Buffer.from(String(ivBase64), "base64") : null;
 
