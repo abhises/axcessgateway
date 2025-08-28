@@ -1420,7 +1420,9 @@ export default class PaymentGatewayAxcess {
     console.log("Webhook secretKey is configured", rawBody, headers);
     try {
       const ivHeader = this.webhookConfig.ivHeaderName.toLowerCase();
+      console.log("ivHeader", ivHeader);
       const sigHeader = this.webhookConfig.sigHeaderName.toLowerCase();
+      console.log("sigHeader", sigHeader);
       const ivBase64 = headers[ivHeader] || headers[ivHeader.toLowerCase()];
       console.log("ivBase64", ivBase64);
       const signature = headers[sigHeader] || headers[sigHeader.toLowerCase()];
