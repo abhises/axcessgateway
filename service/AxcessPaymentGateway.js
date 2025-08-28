@@ -1413,67 +1413,149 @@ export default class PaymentGatewayAxcess {
    * @param {object} headers - incoming headers
    * @returns {{ decryptedJson: object, idempotencyKey?: string, verified: boolean }}
    */
+  // decryptAndVerifyWebhook(rawBody, headers = {}) {
+  //   if (!this.webhookConfig.secretKey) {
+  //     throw new Error("Webhook secretKey is not configured");
+  //   }
+  //   console.log("Webhook secretKey is configured", rawBody, headers);
+  //   try {
+  //     const ivHeader = this.webhookConfig.ivHeaderName.toLowerCase();
+  //     console.log("ivHeader", ivHeader);
+  //     const sigHeader = this.webhookConfig.sigHeaderName.toLowerCase();
+  //     console.log("sigHeader", sigHeader);
+  //     const ivBase64 = headers[ivHeader] || headers[ivHeader.toLowerCase()];
+  //     console.log("ivBase64", ivBase64);
+  //     const signature = headers[sigHeader] || headers[sigHeader.toLowerCase()];
+  //     console.log("signature", signature);
+  //     const iv = ivBase64 ? Buffer.from(String(ivBase64), "base64") : null;
+
+  //     // Decrypt AES-256-CBC: ciphertext is base64 in body; alternatively, rawBody may already be decrypted JSON.
+  //     let plaintext = null;
+  //     const bodyStr = Buffer.isBuffer(rawBody)
+  //       ? rawBody.toString("utf8")
+  //       : String(rawBody || "");
+  //     const maybeJson = bodyStr.trim().startsWith("{") ? bodyStr : null;
+
+  //     if (maybeJson) {
+  //       plaintext = maybeJson; // already plaintext JSON
+  //     } else {
+  //       const cipherBuf = Buffer.from(bodyStr, "base64");
+  //       const key = this._coerceKeyTo32Bytes(this.webhookConfig.secretKey);
+  //       if (!iv) {
+  //         throw new Error("Missing IV header for webhook decryption");
+  //       }
+  //       const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
+  //       const decrypted = Buffer.concat([
+  //         decipher.update(cipherBuf),
+  //         decipher.final(),
+  //       ]);
+  //       plaintext = decrypted.toString("utf8");
+  //     }
+
+  //     // Optional HMAC verification (if you configure to use HMAC-SHA256)
+  //     let verified = true;
+  //     if (signature) {
+  //       const key = this._coerceKeyTo32Bytes(this.webhookConfig.secretKey);
+  //       const h = crypto
+  //         .createHmac("sha256", key)
+  //         .update(plaintext)
+  //         .digest("hex");
+  //       verified = crypto.timingSafeEqual(
+  //         Buffer.from(h, "hex"),
+  //         Buffer.from(signature.replace(/^0x/, ""), "hex")
+  //       );
+  //     }
+
+  //     const decryptedJson = JSON.parse(plaintext);
+  //     const idempotencyKey =
+  //       decryptedJson?.id ||
+  //       decryptedJson?.eventId ||
+  //       decryptedJson?.payloadId ||
+  //       null;
+
+  //     return { decryptedJson, idempotencyKey, verified };
+  //   } catch (e) {
+  //     ErrorHandler.add_error("Axcess webhook decrypt/verify failed", {
+  //       error: e.message,
+  //     });
+  //     throw e;
+  //   }
+  // }
+
   decryptAndVerifyWebhook(rawBody, headers = {}) {
     if (!this.webhookConfig.secretKey) {
       throw new Error("Webhook secretKey is not configured");
     }
-    console.log("Webhook secretKey is configured", rawBody, headers);
-    try {
-      const ivHeader = this.webhookConfig.ivHeaderName.toLowerCase();
-      console.log("ivHeader", ivHeader);
-      const sigHeader = this.webhookConfig.sigHeaderName.toLowerCase();
-      console.log("sigHeader", sigHeader);
-      const ivBase64 = headers[ivHeader] || headers[ivHeader.toLowerCase()];
-      console.log("ivBase64", ivBase64);
-      const signature = headers[sigHeader] || headers[sigHeader.toLowerCase()];
-      console.log("signature", signature);
-      const iv = ivBase64 ? Buffer.from(String(ivBase64), "base64") : null;
+    console.log("Webhook secretKey is configured");
 
-      // Decrypt AES-256-CBC: ciphertext is base64 in body; alternatively, rawBody may already be decrypted JSON.
-      let plaintext = null;
+    try {
+      // Normalize header names
+      const h = {};
+      for (const [k, v] of Object.entries(headers || {})) {
+        h[k.toLowerCase()] = v;
+      }
+
+      // Axcess headers (fall back to your config if present)
+      const ivHex =
+        h["x-initialization-vector"] ||
+        h[this.webhookConfig.ivHeaderName?.toLowerCase() || ""] ||
+        null;
+
+      const tagHex =
+        h["x-authentication-tag"] ||
+        h[this.webhookConfig.sigHeaderName?.toLowerCase() || ""] ||
+        null;
+
+      console.log("ivHex", ivHex);
+      console.log("tagHex", tagHex);
+
+      if (!ivHex) throw new Error("Missing X-Initialization-Vector header");
+      if (!tagHex) throw new Error("Missing X-Authentication-Tag header");
+
+      // Body: often { "encryptedBody": "<hex>" }
       const bodyStr = Buffer.isBuffer(rawBody)
         ? rawBody.toString("utf8")
         : String(rawBody || "");
-      const maybeJson = bodyStr.trim().startsWith("{") ? bodyStr : null;
-
-      if (maybeJson) {
-        plaintext = maybeJson; // already plaintext JSON
-      } else {
-        const cipherBuf = Buffer.from(bodyStr, "base64");
-        const key = this._coerceKeyTo32Bytes(this.webhookConfig.secretKey);
-        if (!iv) {
-          throw new Error("Missing IV header for webhook decryption");
-        }
-        const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
-        const decrypted = Buffer.concat([
-          decipher.update(cipherBuf),
-          decipher.final(),
-        ]);
-        plaintext = decrypted.toString("utf8");
+      let cipherHex;
+      try {
+        const parsed = JSON.parse(bodyStr);
+        cipherHex = parsed?.encryptedBody || null;
+      } catch {
+        cipherHex = bodyStr.trim();
+      }
+      if (!cipherHex || !/^[0-9a-fA-F]+$/.test(cipherHex)) {
+        throw new Error("Webhook body does not contain valid hex ciphertext");
       }
 
-      // Optional HMAC verification (if you configure to use HMAC-SHA256)
-      let verified = true;
-      if (signature) {
-        const key = this._coerceKeyTo32Bytes(this.webhookConfig.secretKey);
-        const h = crypto
-          .createHmac("sha256", key)
-          .update(plaintext)
-          .digest("hex");
-        verified = crypto.timingSafeEqual(
-          Buffer.from(h, "hex"),
-          Buffer.from(signature.replace(/^0x/, ""), "hex")
-        );
-      }
+      // Convert everything from hex
+      const key = Buffer.from(this.webhookConfig.secretKey, "hex"); // must be 64 hex chars
+      const iv = Buffer.from(ivHex, "hex"); // 12 bytes
+      const tag = Buffer.from(tagHex, "hex"); // 16 bytes
+      const cipherBuf = Buffer.from(cipherHex, "hex");
+
+      // Decrypt AES-256-GCM
+      const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
+      decipher.setAuthTag(tag);
+
+      const decrypted = Buffer.concat([
+        decipher.update(cipherBuf),
+        decipher.final(),
+      ]);
+      const plaintext = decrypted.toString("utf8");
+      console.log("Decrypted plaintext", plaintext);
 
       const decryptedJson = JSON.parse(plaintext);
+
+      // Choose an idempotency key field
       const idempotencyKey =
         decryptedJson?.id ||
         decryptedJson?.eventId ||
         decryptedJson?.payloadId ||
+        decryptedJson?.payload?.id ||
         null;
 
-      return { decryptedJson, idempotencyKey, verified };
+      // With GCM, successful decryption == verified
+      return { decryptedJson, idempotencyKey, verified: true };
     } catch (e) {
       ErrorHandler.add_error("Axcess webhook decrypt/verify failed", {
         error: e.message,
