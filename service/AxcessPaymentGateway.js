@@ -1486,7 +1486,7 @@ export default class PaymentGatewayAxcess {
     if (!this.webhookConfig.secretKey) {
       throw new Error("Webhook secretKey is not configured");
     }
-    console.log("Webhook secretKey is configured");
+    // console.log("Webhook secretKey is configured");
 
     try {
       // Normalize header names
@@ -1574,7 +1574,12 @@ export default class PaymentGatewayAxcess {
     // console.log("Axcess handleWebhook rawBody");
     const { decryptedJson, idempotencyKey, verified } =
       this.decryptAndVerifyWebhook(rawBody, headers);
-    // console.log("decryptedJson this is the decrpted", decryptedJson);
+    console.log(
+      "decryptedJson this is the decrpted",
+      decryptedJson,
+      idempotencyKey,
+      verified
+    );
 
     // Optional: use your service to dedupe based on idempotency key
     await this.svc.saveWebhook?.({
