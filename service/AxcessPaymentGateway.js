@@ -1483,9 +1483,10 @@ export default class PaymentGatewayAxcess {
    * @returns {Promise<{ok:true}>}
    */
   async handleWebhook(rawBody, headers = {}) {
+    console.log("Axcess handleWebhook rawBody");
     const { decryptedJson, idempotencyKey, verified } =
       this.decryptAndVerifyWebhook(rawBody, headers);
-    console.log("decryptedJson this is the decrpted", decryptedJson);
+    // console.log("decryptedJson this is the decrpted", decryptedJson);
 
     // Optional: use your service to dedupe based on idempotency key
     await this.svc.saveWebhook?.({
