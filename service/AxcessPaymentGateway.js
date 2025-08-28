@@ -1413,7 +1413,7 @@ export default class PaymentGatewayAxcess {
     if (!this.webhookConfig.secretKey) {
       throw new Error("Webhook secretKey is not configured");
     }
-
+    console.log("Webhook secretKey is configured");
     try {
       const ivBase64 =
         headers[this.webhookConfig.ivHeaderName] ||
